@@ -2,7 +2,7 @@ import select
 import socket
 import sys
 import threading
-import urllib.request as urllib2
+import urllib.request
 import copy
 from time import time, sleep
 
@@ -57,8 +57,7 @@ class Data(object):
         self.dataLock.release()
 
     def new_packets(self, packets):
-        if isinstance(packets, bytes):
-            packets = packets.decode('utf-8', errors='replace')
+        packets = packets.decode()
         for packet in packets.splitlines():
             if not packet.strip():
                 continue
@@ -165,7 +164,7 @@ class Test(threading.Thread):
         while self.tests > 0:
             ready = 0
             timeout = 30
-            test = urllib2.urlopen("http://localhost:9090").read()
+            test = urllib.request.urlopen("http://localhost:9090").read()
             if test == b"Hello World":
                 while not ready and timeout > 0:
                     if self.data.ready():
