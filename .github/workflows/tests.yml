@@ -1,0 +1,49 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+        cache: 'pip'
+    
+    - name: Cache uwsgi build
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/pip
+          ./dogstatsd_plugin.so
+        key: ${{ runner.os }}-uwsgi-3.12-${{ hashFiles('**/plugin.c', '**/uwsgiplugin.py') }}
+        restore-keys: |
+          ${{ runner.os }}-uwsgi-3.12-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install uwsgi==2.0.17
+    
+    - name: Build uwsgi plugin
+      run: |
+        uwsgi --build-plugin .
+    
+    - name: Run tests
+      run: |
+        ./test.sh
